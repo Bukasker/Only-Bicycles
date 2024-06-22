@@ -10,7 +10,7 @@
 
 		public string Model { get; set; } = string.Empty;
 		public string? Brand { get; set; }
-		public int? FrameSize { get; set; }
+		public string? FrameSize { get; set; }
 
 		
 		public int CategoryId { get; set; }
