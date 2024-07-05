@@ -30,7 +30,7 @@ namespace Only_bicycles.Controllers
 			var bicycle = _bicycleRepository.GetBicycleId(id);
 			if (bicycle == null)
 				return NotFound();
-			return View("~/Views/bicycle/Details.cshtml", bicycle);
+			return View(bicycle);
 		}
 
 	}
