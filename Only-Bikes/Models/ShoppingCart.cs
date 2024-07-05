@@ -68,7 +68,8 @@ namespace Only_Bikes.Models
         {
             return ShoppingCartItems ??= _onlyBicycleDbContext.ShoppingCartItems
                 .Where(c => c.ShoppingCartId == ShoppingCartId)
-                .Include(s => s.Bicycle)
+                .Include(s => s.Bicycle).ThenInclude(b => b.Category)
+                .Include(s => s.Bicycle).ThenInclude(b => b.GenderCategory)
                 .ToList();
         }
 
