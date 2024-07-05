@@ -1,0 +1,19 @@
+﻿@model Bicycle;
+
+<h3 class="my-5">
+    @Model.Model
+</h3>
+
+<div class="row gx-5">
+    <img alt="@Model.Model" src="@Model.ImageUrl" class="img-fluid col-5" />
+    <div class="col-7">
+        <p>@Model.Category.CategoryDescription</p>
+        <h3 class="pull-right">@Model.RentCost.ToString()</h3>
+        <div class="addToCart">
+            <p class="button">
+                <a class="btn btn-secondary" asp-controller="ShoppingCart" asp-action="AddToShoppingCart"
+                   asp-route-pieId="@Model.BicycleId">Add to cart</a>
+            </p>
+        </div>
+    </div>
+</div>
