@@ -30,20 +30,20 @@ namespace Only_Bikes.Models
 
         public void AddToCart(Bicycle bicycle)
         {
-            var shoppingCartItem =
-                    _onlyBicycleDbContext.ShoppingCartItems.SingleOrDefault(
-                        s => s.Bicycle.BicycleId == bicycle.BicycleId && s.ShoppingCartId == ShoppingCartId);
+            var bikePresentInCart = _onlyBicycleDbContext.ShoppingCartItems.Any(c => 
+                c.ShoppingCartId == ShoppingCartId && 
+                c.Bicycle.BicycleId == bicycle.BicycleId
+            );
 
-            if (shoppingCartItem == null)
+            if (bikePresentInCart) return;
+
+            var cartItem = new ShoppingCartItem()
             {
-                shoppingCartItem = new ShoppingCartItem
-                {
-                    ShoppingCartId = ShoppingCartId,
-                    Bicycle = bicycle,
-                };
+                BicycleId = bicycle.BicycleId,
+                ShoppingCartId = ShoppingCartId,
+            };
 
-                _onlyBicycleDbContext.ShoppingCartItems.Add(shoppingCartItem);
-            }
+            _onlyBicycleDbContext.ShoppingCartItems.Add(cartItem);
             _onlyBicycleDbContext.SaveChanges();
         }
 
@@ -56,7 +56,7 @@ namespace Only_Bikes.Models
             var localAmount = 0;
 
             if (shoppingCartItem != null)
-            { 
+            {
                 _onlyBicycleDbContext.ShoppingCartItems.Remove(shoppingCartItem);
             }
 
@@ -66,11 +66,10 @@ namespace Only_Bikes.Models
 
         public List<ShoppingCartItem> GetShoppingCartItems()
         {
-            return ShoppingCartItems ??=
-                       _onlyBicycleDbContext.ShoppingCartItems.Where(c =>
-                       c.ShoppingCartId == ShoppingCartId)
-                           .Include(s => s.Bicycle)
-                           .ToList();
+            return ShoppingCartItems ??= _onlyBicycleDbContext.ShoppingCartItems
+                .Where(c => c.ShoppingCartId == ShoppingCartId)
+                .Include(s => s.Bicycle)
+                .ToList();
         }
 
         public void ClearCart()

@@ -1,9 +1,11 @@
 ﻿using Only_Bikes.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Only_bicycles.Models
 {
 	public class Bicycle
 	{
+		[Key]
 		public required int BicycleId { get; set; }
 		public decimal RentCost { get; set; }
 		public bool isAvailableNow { get; set; }

@@ -25,9 +25,9 @@ namespace Only_bicycles.Controllers
             return View(shoppingCartViewModel);
         }
 
-        public RedirectToActionResult AddToShoppingCart(int bikeId)
+        public RedirectToActionResult AddToShoppingCart(int bicycleId)
         {
-            var selectedBike = _bicycleRepository.AllBicycle.FirstOrDefault(p => p.BicycleId == bikeId);
+            var selectedBike = _bicycleRepository.AllBicycle.FirstOrDefault(p => p.BicycleId == bicycleId);
 
             if (selectedBike != null)
             {
@@ -36,9 +36,9 @@ namespace Only_bicycles.Controllers
             return RedirectToAction("Index");
         }
 
-        public RedirectToActionResult RemoveFromShoppingCart(int bikeId)
+        public RedirectToActionResult RemoveFromShoppingCart(int bicycleId)
         {
-            var selectedBike = _bicycleRepository.AllBicycle.FirstOrDefault(p => p.BicycleId == bikeId);
+            var selectedBike = _bicycleRepository.AllBicycle.FirstOrDefault(p => p.BicycleId == bicycleId);
 
             if (selectedBike != null)
             {

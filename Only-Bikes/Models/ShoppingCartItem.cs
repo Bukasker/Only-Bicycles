@@ -5,12 +5,10 @@ namespace Only_Bikes.Models
 {
     public class ShoppingCartItem
     {
-
-        public int ShoppingCartItemId {  get; set; }
-        public Bicycle Bicycle { get; set; } = default!;
-
         [Key]
-        public string? ShoppingCartId { get; set; }
-
+        public int ShoppingCartItemId {  get; set; }
+        public required int BicycleId { get; set; }
+        public Bicycle Bicycle { get; set; } = default!;
+        public required string? ShoppingCartId { get; set; }
     }
 }

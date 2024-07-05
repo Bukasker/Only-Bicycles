@@ -17,7 +17,7 @@ namespace Only_Bikes.Models
         {
             get
             {
-                return _onlyBicycleDbContext.Bicycles.Include(c => c.Category);
+                return _onlyBicycleDbContext.Bicycles.Include(c => c.Category).Include(c => c.GenderCategory);
             }
         }
 
