@@ -15,7 +15,7 @@ namespace Only_bicycles.Controllers
             _bicycleRepository = bicycleRepository;
             _shoppingCart = shoppingCart;
         }
-        public IActionResult Index()
+        public ViewResult Index()
         {
             var items = _shoppingCart.GetShoppingCartItems();
             _shoppingCart.ShoppingCartItems = items;
