@@ -21,24 +21,6 @@ namespace Only_Bikes.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Only_Bikes.Models.ShoppingCartItem", b =>
-                {
-                    b.Property<string>("ShoppingCartId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("BicycleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ShoppingCartItemId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ShoppingCartId");
-
-                    b.HasIndex("BicycleId");
-
-                    b.ToTable("ShoppingCartItems");
-                });
-
             modelBuilder.Entity("Only_bicycles.Models.Bicycle", b =>
                 {
                     b.Property<int>("BicycleId")
@@ -84,7 +66,7 @@ namespace Only_Bikes.Migrations
 
                     b.HasIndex("GenderCategoryID");
 
-                    b.ToTable("Bicycles");
+                    b.ToTable("Bicycles", (string)null);
 
                     b.HasData(
                         new
@@ -205,7 +187,7 @@ namespace Only_Bikes.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
 
                     b.HasData(
                         new
@@ -284,7 +266,7 @@ namespace Only_Bikes.Migrations
 
                     b.HasKey("GenderCategoryID");
 
-                    b.ToTable("GenderCategories");
+                    b.ToTable("GenderCategories", (string)null);
 
                     b.HasData(
                         new
@@ -307,17 +289,6 @@ namespace Only_Bikes.Migrations
                             GenderCategoryID = 4,
                             GenderName = "Unisex"
                         });
-                });
-
-            modelBuilder.Entity("Only_Bikes.Models.ShoppingCartItem", b =>
-                {
-                    b.HasOne("Only_bicycles.Models.Bicycle", "Bicycle")
-                        .WithMany()
-                        .HasForeignKey("BicycleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Bicycle");
                 });
 
             modelBuilder.Entity("Only_bicycles.Models.Bicycle", b =>
