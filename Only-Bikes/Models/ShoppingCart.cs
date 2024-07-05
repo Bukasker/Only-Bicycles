@@ -90,5 +90,15 @@ namespace Only_Bikes.Models
                 .Select(c => c.Bicycle.RentCost).Sum(); // TODO : Rent cost * hours 
             return total;
         }
+
+        public decimal GetHourlyRate()
+        {
+            var bicyclesInCart = _onlyBicycleDbContext.ShoppingCartItems
+                .Include(c => c.Bicycle)
+                .Where(c => c.ShoppingCartId == ShoppingCartId)
+                .Select(c => c.Bicycle);
+            var totalHourlyRate = bicyclesInCart.Sum(b => b.RentCost);
+            return totalHourlyRate;
+        }
     }
 }

@@ -1,41 +1,48 @@
 ﻿@model ShoppingCartViewModel
 
 <h3 class="my-5">
-    Shopping cart
+	Shopping cart
 </h3>
 
 
 <div class="row gx-3">
-    <div class="col-8">
-        @foreach (var line in Model.ShoppingCart.ShoppingCartItems)
-        {
-            <div class="card shopping-cart-card mb-2">
-                <div class="row">
-                    <div class="col-md-4">
-                        <img src="@line.Bicycle.ImageThumbnailUrl" class="img-fluid rounded-start p-2" alt="@line.Bicycle.Model">
-                    </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            <h5 class="card-text">@line.Bicycle.Model</h5>
-                            <div class="d-flex justify-content-between">
-                                <h6>@line.Bicycle.Category.CategoryDescription</h6>
-                                <h2>@line.Bicycle.RentCost.ToString()</h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-    <div class="col-4">
-        <div class="card shopping-cart-card p-3">
-            <div class="row">
-                <h4 class="col">Total:</h4>
-                <h4 class="col text-end">@Model.ShoppingCartTotal.ToString()</h4>
-            </div>
-            <hr />
-            <div class="text-center d-grid">
-            </div>
-        </div>
-    </div>
+	<div class="col-8">
+		@foreach (var line in Model.ShoppingCart.ShoppingCartItems)
+		{
+			<div class="card shopping-cart-card mb-2">
+				<div class="row">
+					<div class="col-md-4">
+						<img src="@line.Bicycle.ImageThumbnailUrl" class="img-fluid rounded-start p-2" alt="@line.Bicycle.Model">
+					</div>
+					<div class="col-md-8">
+						<div class="card-body">
+							<h5 class="card-text">@line.Bicycle.Model</h5>
+							<div class="d-flex justify-content-between">
+								<h6>@line.Bicycle.Category.CategoryDescription</h6>
+								<h2>@line.Bicycle.RentCost.ToString()</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+	<div class="col-4">
+		<div class="card shopping-cart-card p-3">
+			<div class="row">
+				<h4 class="col">Total:</h4>
+				<h4 class="col text-end">@Model.TotalCost</h4>
+			</div>
+			<hr />
+			<form asp-action="UpdateTotalCost" asp-controller="ShoppingCart" method="post">
+				<input type="datetime-local" asp-for="EndDate" class="form-control mb-2" value="@Model.EndDate.ToString("yyyy-MM-ddTHH:mm");" onchange="this.form.submit();" />
+			</form>
+			<input type="text" asp-for="FirstName" class="form-control mb-2" placeholder="Firstname" />
+			<input type="text" asp-for="LastName" class="form-control mb-2" placeholder="Lastname" />
+			<input type="text" asp-for="PhoneNumber" class="form-control mb-2" placeholder="Phone Number" />
+			<div class="text-center d-grid">
+				<button type="submit" class="btn btn-primary">Reserve Bicycles</button>
+			</div>
+		</div>
+	</div>
 </div>

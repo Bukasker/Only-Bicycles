@@ -14,6 +14,7 @@ namespace Only_Bikes.Models
 		public DbSet<GenderCategory> GenderCategories { get; set; }
 		public DbSet<Bicycle> Bicycles { get; set; }
 		public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
+		public DbSet<Reservation> Reservations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

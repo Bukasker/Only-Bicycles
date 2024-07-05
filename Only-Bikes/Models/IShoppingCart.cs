@@ -14,6 +14,8 @@ namespace Only_Bikes.Models
         List<ShoppingCartItem> GetShoppingCartItems();
         void ClearCart();
         decimal GetShoppingCartTotal();
+        decimal GetHourlyRate();
+
         List<ShoppingCartItem> ShoppingCartItems { get; set; }
 
     }
