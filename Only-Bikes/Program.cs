@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Only_bicycles.Models;
 using Only_Bikes.Models;
+using Only_Bikes.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +16,19 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<OnlyBicycleDbContext>(options => {
-	options.UseSqlServer(
-		builder.Configuration["ConnectionStrings:OnlyBikesContentConnection"]);
+
+builder.Services.AddDbContext<OnlyBicycleDbContext>(options =>
+{
+    options.UseSqlServer(
+        builder.Configuration["ConnectionStrings:OnlyBikesContentConnection"]);
 });
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+    });
 
 var app = builder.Build();
 
@@ -30,14 +41,11 @@ app.UseStaticFiles();
 app.UseSession();
 
 
-//app.MapDefaultControllerRoute();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.Run();
+app.UseAuthentication();
+app.UseAuthorization();
 
-
-
-
-
+await app.RunAsync();

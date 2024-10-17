@@ -4,7 +4,7 @@ using Konscious.Security.Cryptography;
 
 namespace Only_Bikes.Services;
 
-public class PasswordHasher
+public static class PasswordHasher
 {
     private const int SaltSize = 16;
     private const int HashSize = 32;
@@ -12,7 +12,7 @@ public class PasswordHasher
     private const int MemorySize = 65536;
     private const int DegreeOfParallelism = 8;
 
-    public static byte[] GenerateSalt()
+    private static byte[] GenerateSalt()
     {
         using var rng = RandomNumberGenerator.Create();
         var salt = new byte[SaltSize];
@@ -20,7 +20,7 @@ public class PasswordHasher
         return salt;
     }
 
-    public static byte[] HashPassword(string password, byte[] salt)
+    private static byte[] HashPassword(string password, byte[] salt)
     {
         var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
         {

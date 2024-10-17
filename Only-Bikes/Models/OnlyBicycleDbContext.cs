@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Only_bicycles.Models;
 using Only_Bikes.Entities;
+using Only_Bikes.Services;
 using Roles = Only_Bikes.Constants.UserRoles;
 
 namespace Only_Bikes.Models;
@@ -14,7 +15,6 @@ public class OnlyBicycleDbContext(DbContextOptions<OnlyBicycleDbContext> options
     public DbSet<Reservation> Reservations { get; set; }
 
     public DbSet<UserRole> UserRoles { get; set; }
-
     public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,7 +23,7 @@ public class OnlyBicycleDbContext(DbContextOptions<OnlyBicycleDbContext> options
         modelBuilder.Entity<GenderCategory>().HasData(OnlyBicycleData.GenderCategories);
         modelBuilder.Entity<Bicycle>().HasData(OnlyBicycleData.Bicycles);
 
-        modelBuilder.Entity<UserRole>().HasData(new List<UserRole>
+        var userRoles = new List<UserRole>
         {
             new()
             {
@@ -34,6 +34,21 @@ public class OnlyBicycleDbContext(DbContextOptions<OnlyBicycleDbContext> options
             {
                 Id = Guid.Parse("c9c5347a-1405-47fc-9246-a94be9e32ce7"),
                 Name = Roles.User
+            }
+        };
+        modelBuilder.Entity<UserRole>().HasData(userRoles);
+
+        var passwordHash = PasswordHasher.CreatePasswordHash("Admin");
+        modelBuilder.Entity<User>().HasData(new List<User>
+        {
+            new()
+            {
+                Id = Guid.Parse("2301399d-20f9-43cb-8bb4-0dab870bd13a"),
+                Name = "Admin",
+                PasswordHash = PasswordHasher.ByteArrayToBase64(passwordHash.Hash),
+                PasswordSalt = PasswordHasher.ByteArrayToBase64(passwordHash.Salt),
+                RoleId = userRoles.First(r => r.Name.Equals(Roles.Admin)).Id,
+                Role = null
             }
         });
 
