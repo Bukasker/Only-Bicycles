@@ -1,5 +1,4 @@
-﻿using Only_Bikes.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Only_bicycles.Models
 {
