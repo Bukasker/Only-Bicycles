@@ -1,0 +1,24 @@
+@using Only_Bikes.Constants
+@using Only_Bikes.ViewModels
+@model Only_Bikes.ViewModels.SettingsViewModel
+
+
+@switch (Model.UserRole.Name)
+{
+    case UserRoles.Admin:
+    {
+        <h1>Jestem Adminem!</h1>
+        break;
+    }
+    case UserRoles.User:
+    {
+        <h1>Jestem Użytkownikiem!</h1>
+        break;
+    }
+    default:
+    {
+        throw new ArgumentOutOfRangeException(nameof(Model.UserRole.Name), "Unhandled user role");
+    }
+}
+
+@await Html.PartialAsync("ResetPassword", new ResetPasswordViewModel())

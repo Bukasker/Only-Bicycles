@@ -9,6 +9,7 @@ public interface IUserService
     Task<(byte[] Salt, byte[] Hash)?> GetUserPasswordHashAndSaltAsync(string identifier);
     Task<User?> GetUserByNameAsync(string identifier);
     Task<bool> AuthenticateUserAsync(string identifier, string password);
+    Task ResetPasswordAsync(string userName, string newPassword);
 }
 
 public class UserService(OnlyBicycleDbContext context) : IUserService
@@ -28,6 +29,7 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
     public async Task<User?> GetUserByNameAsync(string identifier)
     {
         return await context.Users
+            .AsNoTracking()
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Name == identifier);
     }
@@ -40,5 +42,14 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
 
         var (salt, hash) = hashAndSalt.Value;
         return PasswordHasher.VerifyPassword(password, salt, hash);
+    }
+
+    public async Task ResetPasswordAsync(string userName, string newPassword)
+    {
+        var user = await context.Users.SingleAsync(u => u.Name == userName);
+        var (salt, hash) = PasswordHasher.CreatePasswordHash(newPassword);
+        user.PasswordSalt = PasswordHasher.ByteArrayToBase64(salt);
+        user.PasswordHash = PasswordHasher.ByteArrayToBase64(hash);
+        await context.SaveChangesAsync();
     }
 }

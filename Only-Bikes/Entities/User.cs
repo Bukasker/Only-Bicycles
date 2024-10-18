@@ -8,8 +8,8 @@ public class User
 
     [MaxLength(50)] public required string Name { get; init; }
 
-    [MaxLength(128)] public required string PasswordHash { get; init; }
-    [MaxLength(64)] public required string PasswordSalt { get; init; }
+    [MaxLength(128)] public required string PasswordHash { get; set; }
+    [MaxLength(64)] public required string PasswordSalt { get; set; }
 
     public required Guid RoleId { get; init; }
     public required UserRole Role { get; init; }
