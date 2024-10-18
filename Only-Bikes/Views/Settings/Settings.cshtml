@@ -8,6 +8,7 @@
     case UserRoles.Admin:
     {
         <h1>Jestem Adminem!</h1>
+        @await Html.PartialAsync("ChangeUserName", new ChangeUserNameViewModel())
         break;
     }
     case UserRoles.User:

@@ -8,8 +8,10 @@ public interface IUserService
 {
     Task<(byte[] Salt, byte[] Hash)?> GetUserPasswordHashAndSaltAsync(string identifier);
     Task<User?> GetUserByNameAsync(string identifier);
+    Task<User?> GetUserByIdAsync(Guid userId);
     Task<bool> AuthenticateUserAsync(string identifier, string password);
     Task ResetPasswordAsync(string userName, string newPassword);
+    Task ChangeUserNameAsync(Guid userId, string newUserName);
 }
 
 public class UserService(OnlyBicycleDbContext context) : IUserService
@@ -34,6 +36,13 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
             .FirstOrDefaultAsync(u => u.Name == identifier);
     }
 
+    public async Task<User?> GetUserByIdAsync(Guid userId)
+    {
+        return await context.Users
+            .Include(u => u.Role)
+            .SingleOrDefaultAsync(u => u.Id.Equals(userId));
+    }
+
     public async Task<bool> AuthenticateUserAsync(string identifier, string password)
     {
         var hashAndSalt = await GetUserPasswordHashAndSaltAsync(identifier);
@@ -50,6 +59,13 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
         var (salt, hash) = PasswordHasher.CreatePasswordHash(newPassword);
         user.PasswordSalt = PasswordHasher.ByteArrayToBase64(salt);
         user.PasswordHash = PasswordHasher.ByteArrayToBase64(hash);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task ChangeUserNameAsync(Guid userId, string newUserName)
+    {
+        var user = await context.Users.SingleAsync(u => u.Id.Equals(userId));
+        user.Name = newUserName;
         await context.SaveChangesAsync();
     }
 }

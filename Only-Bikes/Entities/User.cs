@@ -6,7 +6,7 @@ public class User
 {
     public required Guid Id { get; init; }
 
-    [MaxLength(50)] public required string Name { get; init; }
+    [MaxLength(50)] public required string Name { get; set; }
 
     [MaxLength(128)] public required string PasswordHash { get; set; }
     [MaxLength(64)] public required string PasswordSalt { get; set; }

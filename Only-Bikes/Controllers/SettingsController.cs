@@ -12,16 +12,18 @@ public class SettingsController(IUserService userService) : Controller
     [HttpGet]
     public async Task<IActionResult> Settings()
     {
-        var userNameClaimValue = User.FindFirst(ClaimTypes.Name)?.Value;
-        if (userNameClaimValue is null)
+        var userNameIdentifierValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userNameIdentifierValue is null || !Guid.TryParse(userNameIdentifierValue, out var userId))
         {
-            throw new InvalidOperationException("User role not found.");
+            ModelState.AddModelError("", "Nie znaleziono użytkownika.");
+            return View();
         }
 
-        var user = await userService.GetUserByNameAsync(userNameClaimValue);
+        var user = await userService.GetUserByIdAsync(userId);
         if (user is null)
         {
-            throw new InvalidOperationException("User with given name not found.");
+            ModelState.AddModelError("", "Nie znaleziono użytkownika.");
+            return View();
         }
 
         var model = new SettingsViewModel
@@ -67,7 +69,34 @@ public class SettingsController(IUserService userService) : Controller
         }
 
         await userService.ResetPasswordAsync(userName: userNameClaimValue, newPassword: model.NewPassword);
-        TempData["SuccessMessage"] = "Hasło zostało zmienione.";
+        TempData["ResetPasswordSuccess"] = "Hasło zostało zmienione.";
+        return RedirectToAction("Settings");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangeUserName(ChangeUserNameViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaimValue is null || !Guid.TryParse(userIdClaimValue, out var userId))
+        {
+            ModelState.AddModelError("", "Nie znaleziono użytkownika.");
+            return View(model);
+        }
+
+        if (string.IsNullOrWhiteSpace(model.NewUserName))
+        {
+            ModelState.AddModelError(nameof(ChangeUserNameViewModel.NewUserName),
+                "Nowa nazwa użytkownika jest wymagana.");
+            return View(model);
+        }
+
+        await userService.ChangeUserNameAsync(userId, model.NewUserName);
+        TempData["UserNameChangeSuccess"] = "Nazwa użytkownika została zmieniona.";
         return RedirectToAction("Settings");
     }
 }
