@@ -3,12 +3,17 @@
 @model Only_Bikes.ViewModels.SettingsViewModel
 
 
+@await Html.PartialAsync("ResetPassword", new ResetPasswordViewModel())
 @switch (Model.UserRole.Name)
 {
     case UserRoles.Admin:
     {
         <h1>Jestem Adminem!</h1>
         @await Html.PartialAsync("ChangeUserName", new ChangeUserNameViewModel())
+        @await Html.PartialAsync("UserList", new UserListViewModel
+        {
+            Users = Model.Users
+        })
         break;
     }
     case UserRoles.User:
@@ -21,5 +26,3 @@
         throw new ArgumentOutOfRangeException(nameof(Model.UserRole.Name), "Unhandled user role");
     }
 }
-
-@await Html.PartialAsync("ResetPassword", new ResetPasswordViewModel())

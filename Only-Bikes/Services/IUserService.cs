@@ -1,3 +1,4 @@
+using System.Collections;
 using Microsoft.EntityFrameworkCore;
 using Only_Bikes.Entities;
 using Only_Bikes.Models;
@@ -6,7 +7,7 @@ namespace Only_Bikes.Services;
 
 public interface IUserService
 {
-    Task<(byte[] Salt, byte[] Hash)?> GetUserPasswordHashAndSaltAsync(string identifier);
+    IQueryable<User> GetUsers();
     Task<User?> GetUserByNameAsync(string identifier);
     Task<User?> GetUserByIdAsync(Guid userId);
     Task<bool> AuthenticateUserAsync(string identifier, string password);
@@ -26,6 +27,11 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
         var salt = PasswordHasher.Base64ToByteArray(user.PasswordSalt);
         var hash = PasswordHasher.Base64ToByteArray(user.PasswordHash);
         return (salt, hash);
+    }
+
+    public IQueryable<User> GetUsers()
+    {
+        return context.Users.AsNoTracking();
     }
 
     public async Task<User?> GetUserByNameAsync(string identifier)

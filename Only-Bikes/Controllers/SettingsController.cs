@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Only_Bikes.Services;
 using Only_Bikes.ViewModels;
 
@@ -26,9 +27,20 @@ public class SettingsController(IUserService userService) : Controller
             return View();
         }
 
+        var users = await userService
+            .GetUsers()
+            .Select(u => new UserViewModel
+            {
+                Id = u.Id,
+                UserName = u.Name,
+                IsBlocked = false,
+                PasswordExpirationDate = null
+            }).ToListAsync();
+
         var model = new SettingsViewModel
         {
-            UserRole = user.Role
+            UserRole = user.Role,
+            Users = users
         };
 
         return View(model);
