@@ -1,4 +1,7 @@
 using System.Collections;
+using System.Security.Policy;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Only_Bikes.Entities;
 using Only_Bikes.Models;
@@ -13,6 +16,13 @@ public interface IUserService
     Task<bool> AuthenticateUserAsync(string identifier, string password);
     Task ResetPasswordAsync(string userName, string newPassword);
     Task ChangeUserNameAsync(Guid userId, string newUserName);
+    Task CreateUserAsync(User user, string password);
+    Task<bool> UpdatePasswordAsync(Guid userId, string currentPassword, string newPassword);
+    Task ToggleUserBlockStatusAsync(Guid userId);
+    Task DeleteUserAsync(Guid userId);
+    Task TogglePasswordRestrictionsAsync(Guid userId);
+    Task UpdateUserAsync(Guid userId, string newUserName, string newPassword, bool? passwordRestrictionsEnabled);
+    Task<bool> ValidateUserPasswordAsync(Guid userId, string password);
 }
 
 public class UserService(OnlyBicycleDbContext context) : IUserService
@@ -70,8 +80,174 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
 
     public async Task ChangeUserNameAsync(Guid userId, string newUserName)
     {
-        var user = await context.Users.SingleAsync(u => u.Id.Equals(userId));
-        user.Name = newUserName;
+        var user = await context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("U¿ytkownik nie zosta³ znaleziony.");
+        }
+
+        user.Name = newUserName; // Zmieniamy nazwê u¿ytkownika
         await context.SaveChangesAsync();
     }
+
+    public async Task CreateUserAsync(User user, string password)
+    {
+        if (user.Role == null)
+        {
+            throw new ArgumentException("Rola u¿ytkownika nie mo¿e byæ pusta.", nameof(user.Role));
+        }
+
+        // Sprawdzanie, czy polityka hase³ jest w³¹czona
+        if (user.IsPasswordPolicyEnabled)
+        {
+            // Weryfikacja, czy has³o spe³nia wymagania
+            if (!PasswordHasher.ValidatePassword(password, requireRestrictions: true))
+            {
+                throw new ArgumentException("Has³o musi zawieraæ co najmniej jedn¹ wielk¹ literê i dwie cyfry.");
+            }
+        }
+
+        // Tworzenie has³a
+        var (salt, hash) = PasswordHasher.CreatePasswordHash(password);
+        user.PasswordSalt = PasswordHasher.ByteArrayToBase64(salt);
+        user.PasswordHash = PasswordHasher.ByteArrayToBase64(hash);
+
+        // Dodaj u¿ytkownika do bazy
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+    }
+
+
+
+    public async Task<bool> UpdatePasswordAsync(Guid userId, string currentPassword, string newPassword)
+    {
+        // Pobierz u¿ytkownika na podstawie ID
+        var user = await context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("U¿ytkownik nie zosta³ znaleziony.");
+        }
+
+        // SprawdŸ poprawnoœæ obecnego has³a
+        var salt = PasswordHasher.Base64ToByteArray(user.PasswordSalt);
+        var hash = PasswordHasher.Base64ToByteArray(user.PasswordHash);
+        if (!PasswordHasher.VerifyPassword(currentPassword, salt, hash))
+        {
+            return false; // Nieprawid³owe obecne has³o
+        }
+
+        // Stwórz nowe has³o
+        var (newSalt, newHash) = PasswordHasher.CreatePasswordHash(newPassword);
+        user.PasswordSalt = PasswordHasher.ByteArrayToBase64(newSalt);
+        user.PasswordHash = PasswordHasher.ByteArrayToBase64(newHash);
+
+        // Zapisz zmiany w bazie danych
+        await context.SaveChangesAsync();
+        return true; // Has³o zaktualizowane pomyœlnie
+    }
+
+    public async Task ToggleUserBlockStatusAsync(Guid userId)
+    {
+        var user = await context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("U¿ytkownik nie zosta³ znaleziony.");
+        }
+
+        // Zmieniamy status blokady
+        user.IsBlocked = !user.IsBlocked;
+        await context.SaveChangesAsync();
+    }
+    public async Task DeleteUserAsync(Guid userId)
+    {
+        var user = await context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            context.Users.Remove(user);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task TogglePasswordRestrictionsAsync(Guid userId)
+    {
+        var user = await context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("U¿ytkownik nie zosta³ znaleziony.");
+        }
+
+        // Zmiana ustawienia restrykcji has³a
+        user.IsPasswordPolicyEnabled = !user.IsPasswordPolicyEnabled;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task UpdateUserAsync(Guid userId, string newUserName, string newPassword, bool? passwordRestrictionsEnabled)
+    {
+        // Pobierz u¿ytkownika na podstawie ID
+        var user = await context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("U¿ytkownik nie zosta³ znaleziony.");
+        }
+
+        // Jeœli u¿ytkownik chce zmieniæ nazwê u¿ytkownika
+        if (!string.IsNullOrEmpty(newUserName) && newUserName != user.Name)
+        {
+            user.Name = newUserName;
+        }
+
+        // Jeœli has³o zosta³o podane, zweryfikuj i zaktualizuj
+        if (!string.IsNullOrEmpty(newPassword))
+        {
+            // SprawdŸ, czy polityka has³a zosta³a zmieniona
+            if (passwordRestrictionsEnabled.HasValue && passwordRestrictionsEnabled.Value != user.IsPasswordPolicyEnabled)
+            {
+                // Jeœli polityka zosta³a zmieniona, zweryfikuj i zaktualizuj has³o
+                if (passwordRestrictionsEnabled.Value)
+                {
+                    // W³¹cz restrykcje has³a - sprawdŸ, czy has³o spe³nia wymagania
+                    if (!PasswordHasher.ValidatePassword(newPassword, true))
+                    {
+                        throw new ArgumentException("Has³o musi zawieraæ co najmniej jedn¹ wielk¹ literê i dwie cyfry.");
+                    }
+                }
+
+                // Zmiana flagi w u¿ytkowniku
+                user.IsPasswordPolicyEnabled = passwordRestrictionsEnabled.Value;
+            }
+            else if (!PasswordHasher.ValidatePassword(newPassword, user.IsPasswordPolicyEnabled))
+            {
+                throw new ArgumentException("Has³o musi zawieraæ co najmniej jedn¹ wielk¹ literê i dwie cyfry.");
+            }
+
+            // Utwórz nowe has³o i zapisujemy je
+            var (salt, hash) = PasswordHasher.CreatePasswordHash(newPassword);
+            user.PasswordSalt = PasswordHasher.ByteArrayToBase64(salt);
+            user.PasswordHash = PasswordHasher.ByteArrayToBase64(hash);
+        }
+
+        // Zapisz zmiany w bazie danych
+        await context.SaveChangesAsync();
+    }
+    public async Task<bool> ValidateUserPasswordAsync(Guid userId, string password)
+    {
+        var user = await context.Users.SingleOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            return false;
+        }
+
+        // Jeœli polityka has³a jest wy³¹czona, nie stosujemy restrykcji
+        bool isPasswordValid = user.IsPasswordPolicyEnabled
+            ? PasswordHasher.ValidatePassword(password, true)
+            : PasswordHasher.ValidatePassword(password, false);
+
+        if (isPasswordValid)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 }

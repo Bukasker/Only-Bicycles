@@ -20,27 +20,37 @@ public class AccountController(IUserService userService) : Controller
     {
         if (!ModelState.IsValid)
         {
-            model.ErrorMessage = "Login lub Hasło niepoprawny";
+            model.ErrorMessage = "Login lub Hasło niepoprawne";
             return View(model);
         }
 
+        // Próbujemy uwierzytelnić użytkownika
         var isAuthenticated = await userService.AuthenticateUserAsync(model.Name, model.Password);
 
         if (isAuthenticated)
         {
             var user = await userService.GetUserByNameAsync(model.Name);
+
             if (user is null)
             {
-                model.ErrorMessage = "Login lub Hasło niepoprawny";
+                model.ErrorMessage = "Login lub Hasło niepoprawne";
                 return View(model);
             }
 
-            var claims = new List<Claim>
+            // Sprawdzamy, czy użytkownik jest zablokowany
+            if (user.IsBlocked)
             {
-                new(ClaimTypes.Name, user.Name),
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new(ClaimTypes.Role, user.Role.Name)
-            };
+                model.ErrorMessage = "Twoje konto zostało zablokowane. Skontaktuj się z administratorem.";
+                return View(model); // Zwracamy widok z komunikatem o błędzie
+            }
+
+            // Tworzymy claimy dla użytkownika
+            var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, user.Name),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Role, user.Role.Name)
+        };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -55,6 +65,7 @@ public class AccountController(IUserService userService) : Controller
         model.ErrorMessage = "Login lub Hasło niepoprawny";
         return View(model);
     }
+
 
     [HttpGet]
     public async Task<IActionResult> Logout()

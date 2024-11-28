@@ -11,6 +11,8 @@ public class User
     [MaxLength(128)] public required string PasswordHash { get; set; }
     [MaxLength(64)] public required string PasswordSalt { get; set; }
 
+    public bool IsBlocked { get; set; } = false;
+    public bool IsPasswordPolicyEnabled { get; set; } = true;
     public required Guid RoleId { get; init; }
     public required UserRole Role { get; init; }
 }

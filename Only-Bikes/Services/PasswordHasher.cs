@@ -1,8 +1,6 @@
+using Konscious.Security.Cryptography;
 using System.Security.Cryptography;
 using System.Text;
-using Konscious.Security.Cryptography;
-
-namespace Only_Bikes.Services;
 
 public static class PasswordHasher
 {
@@ -55,4 +53,19 @@ public static class PasswordHasher
     {
         return Convert.FromBase64String(base64);
     }
+
+    public static bool ValidatePassword(string password, bool requireRestrictions)
+    {
+        if (requireRestrictions)
+        {
+            // Sprawdzenie polityki hase³: has³o musi zawieraæ co najmniej jedn¹ wielk¹ literê i dwie cyfry
+            bool hasUpperCase = password.Any(char.IsUpper);
+            bool hasDigit = password.Count(char.IsDigit) >= 2; // Sprawdzamy, czy s¹ co najmniej dwie cyfry
+
+            return hasUpperCase && hasDigit;  // Warunki polityki has³a
+        }
+
+        return true;  // Jeœli polityka has³a nie jest wymagana, zawsze zwróci true
+    }
+
 }

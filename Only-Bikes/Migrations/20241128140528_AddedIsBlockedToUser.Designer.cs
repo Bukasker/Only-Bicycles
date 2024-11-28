@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Only_Bikes.Models;
 
@@ -11,9 +12,11 @@ using Only_Bikes.Models;
 namespace Only_Bikes.Migrations
 {
     [DbContext(typeof(OnlyBicycleDbContext))]
-    partial class OnlyBicycleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241128140528_AddedIsBlockedToUser")]
+    partial class AddedIsBlockedToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,9 +32,6 @@ namespace Only_Bikes.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsBlocked")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPasswordPolicyEnabled")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -63,7 +63,6 @@ namespace Only_Bikes.Migrations
                         {
                             Id = new Guid("2301399d-20f9-43cb-8bb4-0dab870bd13a"),
                             IsBlocked = false,
-                            IsPasswordPolicyEnabled = true,
                             Name = "Admin",
                             PasswordHash = "1aiziBybGL6HHb0Lait3WdoQUQ7JeIlg1QB+rPd3ZBU=",
                             PasswordSalt = "CNrViJrDAPgoWmRRehDRjQ==",

@@ -59,15 +59,15 @@
                         </td>
                         <td>
                             <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">Edytuj</a>
-                            <form asp-action="Block" asp-route-id="@user.Id" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-sm @(user.IsBlocked ? "btn-success" : "btn-danger")">
-                                    @(user.IsBlocked ? "Odblokuj" : "Zablokuj")
-                                </button>
-                            </form>
-                            <form asp-action="Delete" asp-route-id="@user.Id" method="post" style="display:inline;"
-                                  onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">
-                                <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
-                            </form>
+                                <form asp-action="Block" asp-route-id="@user.Id" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm @(user.IsBlocked ? "btn-success" : "btn-danger")">
+                                        @(user.IsBlocked ? "Odblokuj" : "Zablokuj")
+                                    </button>
+                                </form>
+                                <form asp-action="Delete" asp-route-id="@user.Id" method="post" style="display:inline;"
+                                      onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
+                                </form>
                             <form asp-action="TogglePasswordRestrictions" asp-route-id="@user.Id" method="post" style="display:inline;">
                                 <button type="submit" class="btn btn-sm btn-secondary">Ograniczenia Haseł</button>
                             </form>
