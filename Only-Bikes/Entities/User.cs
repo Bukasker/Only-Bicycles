@@ -15,4 +15,8 @@ public class User
     public bool IsPasswordPolicyEnabled { get; set; } = true;
     public required Guid RoleId { get; init; }
     public required UserRole Role { get; init; }
+
+    public DateTime? PasswordExpirationDate { get; set; }
+    public List<string> PreviousPasswordHashes { get; set; } = new List<string>();
+    public bool IsFirstLogin { get; set; } = true; 
 }

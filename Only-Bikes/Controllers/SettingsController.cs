@@ -14,6 +14,58 @@ public class SettingsController(IUserService userService, OnlyBicycleDbContext c
 {
     private readonly IUserService _userService = userService;
     private readonly OnlyBicycleDbContext _context = context;
+    [HttpGet]
+    public IActionResult ResetPassword()
+    {
+        return View(new ResetPasswordViewModel());
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model); // Zwróć widok z błędami walidacji
+        }
+
+        // Pobierz ID użytkownika z kontekstu autoryzacji
+        var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdValue == null || !Guid.TryParse(userIdValue, out var userId))
+        {
+            ModelState.AddModelError("", "Nie można zweryfikować tożsamości użytkownika.");
+            return View(model);
+        }
+
+        try
+        {
+            // Zaktualizuj hasło użytkownika
+            var isUpdated = await _userService.UpdatePasswordAsync(userId, model.CurrentPassword, model.NewPassword);
+            if (!isUpdated)
+            {
+                ModelState.AddModelError("", "Podano nieprawidłowe aktualne hasło.");
+                return View(model); // Zwróć widok z błędem
+            }
+
+            // Zmień status "IsFirstLogin" na false, jeśli jest to pierwsze logowanie
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user?.IsFirstLogin == true)
+            {
+                user.IsFirstLogin = false; // Wyłącz flagę pierwszego logowania
+                await _userService.UpdateUserAsync(user.Id, user.Name, null, null);
+            }
+
+            TempData["ResetPasswordSuccess"] = "Hasło zostało pomyślnie zresetowane.";
+            return RedirectToAction("Settings", "Settings");
+        }
+        catch (Exception ex)
+        {
+            // Obsługa błędów
+            ModelState.AddModelError("", $"Błąd: {ex.Message}");
+            return View(model);
+        }
+    }
+
 
     [HttpGet]
     public async Task<IActionResult> Settings()
@@ -37,7 +89,8 @@ public class SettingsController(IUserService userService, OnlyBicycleDbContext c
             {
                 Id = u.Id,
                 UserName = u.Name,
-                IsBlocked = u.IsBlocked  // Upewnij się, że status blokady jest uwzględniany
+                IsBlocked = u.IsBlocked,  // Upewnij się, że status blokady jest uwzględniany
+                PasswordExpirationDate = u.PasswordExpirationDate // Pobieranie daty wygaśnięcia
             }).ToListAsync();
 
         var model = new SettingsViewModel
@@ -151,6 +204,7 @@ public class SettingsController(IUserService userService, OnlyBicycleDbContext c
             Name = model.Name,
             RoleId = role.Id,
             Role = role,
+
             PasswordSalt = string.Empty, // Tymczasowe wartości dla hash i salt
             PasswordHash = string.Empty // Do uzupełnienia np. w UserService
         };
@@ -164,6 +218,7 @@ public class SettingsController(IUserService userService, OnlyBicycleDbContext c
         }
 
         // Tworzenie użytkownika w bazie danych
+        user.PasswordExpirationDate = DateTime.UtcNow.AddDays(90);
         await _userService.CreateUserAsync(user, model.Password);
 
         // Przekierowanie po sukcesie
@@ -171,33 +226,6 @@ public class SettingsController(IUserService userService, OnlyBicycleDbContext c
         return RedirectToAction("Settings");
     }
 
-
-    [HttpPost]
-    [Authorize]
-    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
-        var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdValue == null || !Guid.TryParse(userIdValue, out var userId))
-        {
-            ModelState.AddModelError("", "Nie można zweryfikować tożsamości użytkownika.");
-            return View(model);
-        }
-
-        var isUpdated = await _userService.UpdatePasswordAsync(userId, model.CurrentPassword, model.NewPassword);
-        if (!isUpdated)
-        {
-            ModelState.AddModelError("", "Podano nieprawidłowe aktualne hasło.");
-            return View(model);
-        }
-
-        TempData["ResetPasswordSuccess"] = "Hasło zostało pomyślnie zresetowane.";
-        return RedirectToAction("Settings");
-    }
 
     [HttpPost]
     [Authorize]

@@ -115,7 +115,12 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
         // Dodaj u¿ytkownika do bazy
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
+
+        // Ustawienie daty wygaœniêcia has³a (np. 90 dni)
+        user.PasswordExpirationDate = DateTime.UtcNow.AddDays(90);
+        await context.SaveChangesAsync();
     }
+
 
 
 
@@ -128,7 +133,13 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
             throw new InvalidOperationException("U¿ytkownik nie zosta³ znaleziony.");
         }
 
-        // SprawdŸ poprawnoœæ obecnego has³a
+        // Sprawdzenie, czy has³o wygas³o
+        if (user.PasswordExpirationDate.HasValue && user.PasswordExpirationDate.Value < DateTime.UtcNow)
+        {
+            throw new InvalidOperationException("Twoje has³o wygas³o. Musisz ustawiæ nowe has³o.");
+        }
+
+        // Sprawdzenie poprawnoœci obecnego has³a
         var salt = PasswordHasher.Base64ToByteArray(user.PasswordSalt);
         var hash = PasswordHasher.Base64ToByteArray(user.PasswordHash);
         if (!PasswordHasher.VerifyPassword(currentPassword, salt, hash))
@@ -136,15 +147,33 @@ public class UserService(OnlyBicycleDbContext context) : IUserService
             return false; // Nieprawid³owe obecne has³o
         }
 
-        // Stwórz nowe has³o
+        // Sprawdzamy, czy nowe has³o ró¿ni siê od poprzednich
         var (newSalt, newHash) = PasswordHasher.CreatePasswordHash(newPassword);
+        if (user.PreviousPasswordHashes.Contains(PasswordHasher.ByteArrayToBase64(newHash)))
+        {
+            throw new InvalidOperationException("Nowe has³o musi ró¿niæ siê od poprzednich.");
+        }
+
+        // Zaktualizuj has³o
         user.PasswordSalt = PasswordHasher.ByteArrayToBase64(newSalt);
         user.PasswordHash = PasswordHasher.ByteArrayToBase64(newHash);
 
+        // Dodaj nowe has³o do historii (np. przechowujemy tylko ostatnich 5 hase³)
+        if (user.PreviousPasswordHashes.Count >= 5)
+        {
+            user.PreviousPasswordHashes.RemoveAt(0); // Usuwamy najstarsze has³o
+        }
+        user.PreviousPasswordHashes.Add(PasswordHasher.ByteArrayToBase64(newHash));
+
+        // Ustaw now¹ datê wygaœniêcia has³a (np. 90 dni od teraz)
+        user.PasswordExpirationDate = DateTime.UtcNow.AddDays(90);
+
         // Zapisz zmiany w bazie danych
+         user.PasswordExpirationDate = DateTime.UtcNow.AddDays(90);
         await context.SaveChangesAsync();
         return true; // Has³o zaktualizowane pomyœlnie
     }
+
 
     public async Task ToggleUserBlockStatusAsync(Guid userId)
     {
